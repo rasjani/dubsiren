@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Zongo Dub Siren</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="container">
+      <h1>ZONGO DUB SIREN</h1>
+      <div class="param-container">
+        <div class="param-group patch-selection">
+          <h2>Patches</h2>
+          <p>
+              <label>
+                <input type="radio" name="patch" value="1">1
+              </label>
+              <label>
+                <input type="radio" name="patch" value="2">2
+              </label>
+              <label>
+                <input type="radio" name="patch" value="3">3
+              </label>
+          </p>
+          <p>
+              <label>
+                <input type="radio" name="patch" value="4">4
+              </label>
+              <label>
+                <input type="radio" name="patch" value="5">5
+              </label>
+              <label>
+                <input type="radio" name="patch" value="6">6
+              </label>
+          </p>
+          <p>
+              <label>
+                <input type="radio" name="patch" value="7">7
+              </label>
+              <label>
+                <input type="radio" name="patch" value="8">8
+              </label>
+              <label>
+                <input type="radio" name="patch" value="9">9
+              </label>
+          </p>
+        </div>
+        <div class="param-group">
+          <h2>Carrier</h2>
+          <label>Frequency<input class="mainFrequency" max="1000" min="20" step="1" value="400" type="range"></label>
+          <p>
+          <label>
+            <input type="radio" name="mainOscillatorType" class="mainOscillatorType" value="sine">Sine
+          </label>
+          <label>
+            <input type="radio" name="mainOscillatorType" class="mainOscillatorType" value="square" checked="checked">Square
+          </label>
+          <label>
+            <input type="radio" name="mainOscillatorType" class="mainOscillatorType" value="triangle">Triangle
+          </label>
+          <label>
+            <input type="radio" name="mainOscillatorType" class="mainOscillatorType" value="sawtooth">Sawtooth
+          </label>
+        </div>
+        <div class="param-group">
+          <h2>LFO</h2>
+          <p>
+            <label>Frequency<input class="modulationFrequency" min="0.1" max="12" step="0.1" value="1" type="range"><span class="valueDisplay"></label>
+            <label>Amplitude<input class="modulationAmplitude" min="1" max="500" step="1" value="200" type="range"><span class="valueDisplay"></label>
+          <p>
+          <label>
+            <input type="radio" name="modulationOscillatorType" class="modulationOscillatorType" value="sine" checked="checked">Sine
+          </label>
+          <label>
+            <input type="radio" name="modulationOscillatorType" class="modulationOscillatorType" value="square">Square
+          </label>
+          <label>
+            <input type="radio" name="modulationOscillatorType" class="modulationOscillatorType" value="triangle">Triangle
+          </label>
+          <label>
+            <input type="radio" name="modulationOscillatorType" class="modulationOscillatorType" value="sawtooth">Sawtooth
+          </label>
+          <p>
+            <label><input class="modulationTapTempoSync" type="checkbox">Tap tempo sync</label></label>
+          </p>
+        </div>
+        <div class="param-group">
+          <h2>Echo</h2>
+          <p>
+            <label>Delay<input class="delayTime" min="0.1" max="1" step="0.01" value="0.5" type="range"></label>
+          </p>
+          <p class="delayFactorContainer">
+            <label>Factor</label>
+            <label class="delayFactorLabel"><input type="radio" class="delayFactor" name="delayFactor" value="0.25">¼</label>
+            <label class="delayFactorLabel"><input type="radio" class="delayFactor" name="delayFactor" value="0.5">½</label>
+            <label class="delayFactorLabel"><input type="radio" class="delayFactor" name="delayFactor" value="0.75">¾</label>
+            <label class="delayFactorLabel"><input type="radio" class="delayFactor" name="delayFactor" checked="checked" value="1">1</label>
+            <label class="delayFactorLabel"><input type="radio" class="delayFactor" name="delayFactor" value="1.5">³⁄₂</label>
+            <label class="delayFactorLabel"><input type="radio" class="delayFactor" name="delayFactor" value="2">2</label>
+          </p>
+          <p>
+            <label>Feedback<input class="delayFeedback" min="0" max="1" step="0.01" value="0.4" type="range"></label>
+            <label>Cutoff frequency<input class="delayCutoffFrequency" min="1000" max="10000" step="10" value="2000" type="range"></label>
+          </p>
+          <p>
+            <label><input class="delayTapTempoSync" type="checkbox">Tap tempo sync</label></label>
+          </p>
+        </div>
+        <div class="param-group">
+          <h2>Tap Tempo</h2>
+          <p>
+            <label><button class="big-button" id="tapTempoButton">Tap</button><span id="tapTempoValue">---</span><span id="tapTempoUnit">BPM</span></label>
+          </p>
+        </div>
+        <div class="param-group">
+          <h2>Output</h2>
+          <p>
+          <label>Volume<input class="volume" min="0" max="1" step="0.01" value="0.8" type="range"></label>
+          <canvas id="canvas" width="220" height="24"></canvas>
+          </p>
+        </div>
+      </div>
+      <div class="clear">
+        <button id="playButton" class="big-button">Play</button>
+        <button id="panicButton" class="big-button">Reset</button>
+      </div>
+      <footer>
+        <p class="help-text">Shortcuts: space → play, 1-9 → select patch, t → tap tempo, j/k → +/- delay factor</p>
+        <p class="credit">
+        Made by <a href="https://soundcloud.com/ras-alfred/tracks">Ras Alfred</a> for <a href="https://zongosound.com">Zongo Sound</a>.
+          <a href="https://zongosound.com"><img width="80" src="https://zongosound.com/images/zongo_sound_logo.png" alt="Zongo Sound Logo"></a>
+        </p>
+        <div class="clear"></div>
+      </footer>
+    </div>
+    <script src="siren.js"></script>
+  </body>
+</html>
