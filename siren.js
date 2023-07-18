@@ -32,7 +32,6 @@ var currentPatch, delay, feedback, filter,
     patchKeyMaps = getPatchKeyMaps(),
     analyser = ctx.createAnalyser();
 
-
 function getSync(storageKey, element) {
   var state = null
   try {
@@ -80,6 +79,7 @@ function initVolume() {
 
     outputVolumeSlider.addEventListener("input", function () {
         outputGain.gain.value = outputVolumeSlider.value / 2.0;
+        localStorage.setItem("input:volume", outputVolumeSlider.value.toString())
     });
 
     var canvasElement = document.getElementById("canvas");
@@ -104,6 +104,12 @@ function initVolume() {
 
         // create the meters
         canvas.fillRect(0, 0, (0 + average) * 1.8, height);
+    }
+    try {
+        var storedVolume = parseFloat(localStorage.getItem("input:volume"))
+        outputVolumeSlider.value = parseFloat(localStorage.getItem("input:volume"))
+    } catch(e) {
+        log(e)
     }
 }
 
@@ -496,6 +502,13 @@ initPatches();
 bindSpaceBar();
 bindButtons();
 initTapTempo();
+
+// AudioContext wont be available before generating initial sound
+// So volume setup from initial volume slider wont be correct before initial sound is played
+// and following event listener *might* fix that ...
+ctx.addEventListener("statechange", function() {
+  outputGain.gain.value = outputVolumeSlider.value / 2.0;
+})
 
 return {
   outputGain: outputGain
