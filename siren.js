@@ -33,6 +33,25 @@ var currentPatch, delay, feedback, filter,
     analyser = ctx.createAnalyser();
 
 
+function getSync(storageKey, element) {
+  var state = null
+  try {
+    state = localStorage.getItem(storageKey)
+  } catch (err) {
+    log(err)
+  }
+  if (state != null) {
+    element.checked = state === "true"
+  } else {
+    setSync(storageKey, false)
+  }
+}
+
+function setSync(storageKey, state) {
+  localStorage.setItem(storageKey, state.toString())
+}
+
+
 function getPatchKeyMaps() {
   const upperRowOffset = 48, numPadOffset = 96;
   const values = Array.from($$(".patch-selection input")).map(
@@ -373,6 +392,8 @@ function initTapTempo() {
   var previousTime = null,  // Time of the latest tap
     tapTempoButton = $("#tapTempoButton"),
     tapTempoValueContainer = $("#tapTempoValue"),
+    modulationTempoSync = $(".modulationTapTempoSync"),
+    delayTempoSync = $(".delayTapTempoSync"),
     avg = RunningAverage();
 
   function durationToBpm(duration) {
@@ -408,7 +429,7 @@ function initTapTempo() {
       avg = RunningAverage();
     } else {
       var currentTime = new Date();
-      var duration = (currentTime - previousTime); 
+      var duration = (currentTime - previousTime);
       log("********************");
       log("Duration", duration / 1000, "seconds");
       var averageDuration = avg(duration);
@@ -438,6 +459,18 @@ function initTapTempo() {
       updateDelayTime();
     }
   }
+
+
+  modulationTempoSync.addEventListener("change", function(evt) {
+    setSync("sync:modulation", evt.target.checked)
+  })
+
+  delayTempoSync.addEventListener("change", function(evt) {
+    setSync("sync:delay", evt.target.checked)
+  })
+
+  getSync("sync:modulation", modulationTempoSync )
+  getSync("sync:delay", delayTempoSync)
 
   tapTempoButton.addEventListener("click", function(evt) {
     computeTempo();
