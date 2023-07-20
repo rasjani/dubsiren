@@ -32,25 +32,6 @@ var currentPatch, delay, feedback, filter,
     patchKeyMaps = getPatchKeyMaps(),
     analyser = ctx.createAnalyser();
 
-function getSync(storageKey, element) {
-  var state = null
-  try {
-    state = localStorage.getItem(storageKey)
-  } catch (err) {
-    log(err)
-  }
-  if (state != null) {
-    element.checked = state === "true"
-  } else {
-    setSync(storageKey, false)
-  }
-}
-
-function setSync(storageKey, state) {
-  localStorage.setItem(storageKey, state.toString())
-}
-
-
 function getPatchKeyMaps() {
   const upperRowOffset = 48, numPadOffset = 96;
   const values = Array.from($$(".patch-selection input")).map(
@@ -258,11 +239,15 @@ function initPatches() {
 
     if (!currentPatch) {
         currentPatch = "1";
-        var inputs = $$("input[type=range], .mainOscillatorType:checked, .modulationOscillatorType:checked, input.delayFactor:checked");
+        var inputs = $$("input[type=range], .mainOscillatorType:checked, .modulationOscillatorType:checked, input.delayFactor:checked, .modulationTapTempoSync, .delayTapTempoSync");
         inputs.forEach(function(input) {
           Object.values(patchKeyMaps.upperRow).forEach(function(patch) {
             var key = "patch:" + patch + ":" + input.className;
-            localStorage.setItem(key, input.value);
+            if (input.type === "checkbox") {
+              localStorage.setItem(key, input.checked);
+            } else {
+              localStorage.setItem(key, input.value);
+            }
           })
           input.addEventListener("change", storeInputValue);
         });
@@ -287,9 +272,13 @@ function initPatches() {
 
 
 function storeInputValue(evt) {
-  var slider = evt.target;
-  var key = "patch:" + currentPatch + ":" + slider.className;
-  localStorage.setItem(key, slider.value);
+  var target = evt.target;
+  var key = "patch:" + currentPatch + ":" + target.className;
+  if (target.type === "checkbox") {
+    localStorage.setItem(key, target.checked);
+  } else {
+    localStorage.setItem(key, slider.value);
+  }
 }
 
 
@@ -305,6 +294,8 @@ function applyPatch(patchNumber) {
       } else if (input.type === "radio") {
         var selector = '.' + className + '[value="' + storedValue + '"]';
         $(selector).checked = true;
+      } else if (input.type === "checkbox") {
+        input.checked = storedValue === "true"
       }
     }
   });
@@ -465,18 +456,6 @@ function initTapTempo() {
       updateDelayTime();
     }
   }
-
-
-  modulationTempoSync.addEventListener("change", function(evt) {
-    setSync("sync:modulation", evt.target.checked)
-  })
-
-  delayTempoSync.addEventListener("change", function(evt) {
-    setSync("sync:delay", evt.target.checked)
-  })
-
-  getSync("sync:modulation", modulationTempoSync )
-  getSync("sync:delay", delayTempoSync)
 
   tapTempoButton.addEventListener("click", function(evt) {
     computeTempo();
