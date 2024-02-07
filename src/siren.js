@@ -277,7 +277,7 @@ function storeInputValue(evt) {
   if (target.type === "checkbox") {
     localStorage.setItem(key, target.checked);
   } else {
-    localStorage.setItem(key, slider.value);
+    localStorage.setItem(key, outputVolumeSlider.value);
   }
 }
 
