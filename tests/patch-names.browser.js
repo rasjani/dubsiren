@@ -1,0 +1,41 @@
+async function patchNameChecks(page) {
+  const url=page.url(), context=await page.context().browser().newContext();page=await context.newPage();await page.goto(url);
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const check=(ok,label)=>{if(!ok)throw new Error(label);};
+  const ready=()=>page.waitForFunction(()=>!!window.ZongoDubSiren && !!document.querySelector('#midiRows tr'));
+  await ready();
+  check(await page.locator('input[name=patch]').count()===4,'Four patches');
+  check((await page.locator('.patch-name').allTextContents()).join(',')==='1,2,3,4','Default names and order');
+  await page.locator('.patch-name[data-patch="2"]').click();
+  const editor=page.locator('.patch-name-input[data-patch="2"]');await editor.fill('  Space echo  ');await editor.press('Enter');
+  check(await page.locator('.patch-name[data-patch="2"]').textContent()==='Space echo','Name saved and trimmed');
+  check(await page.locator('input[name=patch][value="1"]').isChecked(),'Rename does not change selected profile');
+  await page.locator('.patch-name[data-patch="2"]').click();await editor.fill('Cancelled');await editor.press('Escape');
+  check(await page.locator('.patch-name[data-patch="2"]').textContent()==='Space echo','Escape cancels');
+  await page.locator('.patch-name[data-patch="3"]').click();await page.locator('.patch-name-input[data-patch="3"]').fill('Dub swell');
+  await page.locator('h1').click();
+  check(await page.locator('.patch-name[data-patch="3"]').textContent()==='Dub swell','Click outside commits');
+  await page.reload();await ready();
+  check((await page.locator('.patch-name').allTextContents()).join(',')==='1,Space echo,Dub swell,4','Names persist in fixed slot order');
+  await page.locator('.patch-name[data-patch="2"]').click();await editor.fill('');await editor.press('Enter');
+  check(await page.locator('.patch-name[data-patch="2"]').textContent()==='2','Empty name resets to slot number');
+  await page.locator('h1').click();await page.keyboard.press('4');
+  check(await page.locator('input[name=patch][value="4"]').isChecked(),'Shortcut four selects fourth slot');
+  await page.keyboard.press('9');
+  check(await page.locator('input[name=patch][value="4"]').isChecked(),'Shortcut nine no longer selects a patch');
+  await page.locator('.patch-name[data-patch="1"]').click();await page.locator('.patch-name-input[data-patch="1"]').fill('1234');
+  check(await page.locator('input[name=patch][value="4"]').isChecked(),'Typing digits does not select patches');
+  await page.locator('.patch-name-input[data-patch="1"]').press('Enter');
+  await page.evaluate(async()=>{
+    const saved=JSON.parse(localStorage.getItem('dubsiren:settings:v2'));delete saved.patchNames;
+    for(let id=5;id<=9;id++)saved.patches[id]={...saved.patches['1'],mainFrequency:700};
+    saved.currentPatch='8';localStorage.setItem('dubsiren:settings:v2',JSON.stringify(saved));
+  });
+  await page.reload();await ready();
+  check(await page.locator('input[name=patch][value="1"]').isChecked(),'Removed selected slot falls back to one');
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('dubsiren:settings:v2')));
+  check(saved.patches['8'].mainFrequency===700,'Old hidden profiles preserved');
+  check(saved.patchNames['4']==='4','Older settings gain default names');
+  check(errors.length===0,errors.join('\n'));
+  await context.close();return {checks:'four slots, editing, Enter, Escape, blur, empty names, stable order, restart, shortcuts, old settings migration',errors};
+}
