@@ -1,4 +1,5 @@
 /* jshint browser: true */
+window.DubSettings.ready.then(function() {
 window.ZongoDubSiren = (function() {
 "use strict";
 
@@ -175,7 +176,7 @@ function initVolume() {
 
     outputVolumeSlider.addEventListener("input", function () {
         outputGain.gain.value = outputVolumeSlider.value / 2.0;
-        localStorage.setItem("input:volume", outputVolumeSlider.value.toString())
+        window.DubSettings.state.volume = Number(outputVolumeSlider.value);
     });
 
     var canvasElement = document.getElementById("canvas");
@@ -201,12 +202,9 @@ function initVolume() {
         // create the meters
         canvas.fillRect(0, 0, (0 + average) * 1.8, height);
     }
-    try {
-        var storedVolume = parseFloat(localStorage.getItem("input:volume"))
-        if (Number.isFinite(storedVolume)) { outputVolumeSlider.value = storedVolume; }
-    } catch(e) {
-        log(e)
-    }
+    outputVolumeSlider.value = window.DubSettings.state.volume;
+    outputGain.gain.value = outputVolumeSlider.value / 2;
+    outputVolumeSlider.addEventListener("change", function() { window.DubSettings.updateSound(); });
 }
 
 
@@ -336,85 +334,45 @@ function patchIndex(patchNumber) {
 
 
 function selectPatch(patch) {
-    currentPatch = patch;
-    localStorage.setItem("patch:current", currentPatch);
-    applyPatch(currentPatch);
+  currentPatch = String(patch);
+  window.DubSettings.state.currentPatch = currentPatch;
+  applyPatch(currentPatch);
+  window.DubSettings.updateSound();
 }
-
 
 function initPatches() {
-    currentPatch = localStorage.getItem("patch:current");
-    var patchRadioButtons = $$("input[name=patch]");
-
-    if (!currentPatch) {
-        currentPatch = "1";
-        var inputs = $$("input[type=range], .mainOscillatorType:checked, .modulationOscillatorType:checked, input.delayFactor:checked, .modulationTapTempoSync, .delayTapTempoSync");
-        inputs.forEach(function(input) {
-          Object.values(patchKeyMaps.upperRow).forEach(function(patch) {
-            var key = "patch:" + patch + ":" + input.className;
-            if (input.type === "checkbox") {
-              localStorage.setItem(key, input.checked);
-            } else {
-              localStorage.setItem(key, input.value);
-            }
-          })
-          input.addEventListener("change", storeInputValue);
-        });
-    }
-    var currentPatchRadioButton = patchRadioButtons[patchIndex(currentPatch)];
-    currentPatchRadioButton.setAttribute("checked", "checked");
-    applyPatch(currentPatch);
-
-    patchRadioButtons.forEach(function(radioButton) {
-        radioButton.addEventListener("click", function() {
-          selectPatch(radioButton.value);
-        });
-    });
-
-    var inputs = $$("input[type=range], .mainOscillatorType, .modulationOscillatorType, input.delayFactor");
-    inputs.forEach(function(input) {
+  currentPatch = window.DubSettings.state.currentPatch;
+  applyPatch(currentPatch);
+  $$("input[name=patch]").forEach(function(input) {
+    input.addEventListener("change", function() { if (input.checked) selectPatch(input.value); });
+  });
+  var fields = Object.keys(window.DubSettings.state.patches[currentPatch]);
+  fields.forEach(function(name) {
+    $$("input." + name).forEach(function(input) {
       input.addEventListener("change", storeInputValue);
     });
-
-    initPatchKeyBindings();
+  });
+  initPatchKeyBindings();
 }
 
-
-function storeInputValue(evt) {
-  var target = evt.target;
-  var key = "patch:" + currentPatch + ":" + target.className;
-  if (target.type === "checkbox") {
-    localStorage.setItem(key, target.checked);
-  } else {
-    localStorage.setItem(key, target.value);
-  }
+function storeInputValue(event) {
+  var input=event.target;
+  if (input.type === "radio" && !input.checked) return;
+  window.DubSettings.state.patches[currentPatch][input.className] = input.type === "checkbox" ? input.checked : input.type === "range" ? Number(input.value) : input.value;
+  window.DubSettings.updateSound();
 }
-
 
 function applyPatch(patchNumber) {
-  var prefix = "patch:" + patchNumber + ":";
-  var patchKeys = Object.keys(localStorage).forEach(function(key) {
-    if (key.indexOf(prefix) === 0) {
-      var className = key.replace(prefix, "");
-      var input = $("." + className);
-      var storedValue = localStorage.getItem(key);
-      if (input.type === "range") {
-        input.value = storedValue;
-      } else if (input.type === "radio") {
-        var selector = '.' + className + '[value="' + storedValue + '"]';
-        $(selector).checked = true;
-      } else if (input.type === "checkbox") {
-        input.checked = storedValue === "true"
-      }
-    }
+  var profile = window.DubSettings.state.patches[patchNumber];
+  Object.keys(profile).forEach(function(name) {
+    var input = $("input." + name);
+    if (input.type === "radio") $("input." + name + '[value="' + profile[name] + '"]').checked=true;
+    else if (input.type === "checkbox") input.checked=profile[name];
+    else input.value=profile[name];
   });
-  updateMainFrequency();
-  updateModulationFrequency();
-  updateModulationAmplitude();
-  updateDelayTime();
-  updateCutoff();
-  outputGain.gain.value = outputVolumeSlider.value / 2;
-  refreshValueTooltips();
+  $("input[name=patch][value='"+patchNumber+"']").checked=true;
+  updateMainFrequency(); updateModulationFrequency(); updateModulationAmplitude();
+  updateDelayTime(); updateCutoff(); refreshValueTooltips();
 }
 
 
@@ -662,3 +620,4 @@ return {
 };
 
 }());
+});
