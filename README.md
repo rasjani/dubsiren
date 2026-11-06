@@ -4,6 +4,8 @@ Dub siren
 
 Slightly patched version of https://siren.zongosound.com dub siren.
 
+![iTal Tone Dub Siren desktop app showing the four factory presets](docs/images/tauri-app.png)
+
 
 
 src/ folder can be used as-is via webbrowser
