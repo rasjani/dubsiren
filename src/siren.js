@@ -30,7 +30,119 @@ var currentPatch, delay, feedback, filter,
     outputVolumeSlider = $("input.volume"),
     javascriptNode = ctx.createScriptProcessor(2048, 1, 1),
     patchKeyMaps = getPatchKeyMaps(),
-    analyser = ctx.createAnalyser();
+    analyser = ctx.createAnalyser(),
+    valueTooltips = [];
+
+function refreshValueTooltips() {
+  valueTooltips.forEach(function(refresh) { refresh(); });
+}
+
+
+function initValueTooltips() {
+  function hz(input) {
+    return Number(input.value) + " Hz";
+  }
+
+  function modulationDepth(input) {
+    return "±" + hz(input);
+  }
+
+  function percent(input) {
+    return Math.round(Number(input.value) * 100) + "%";
+  }
+
+  function milliseconds(seconds) {
+    return Number((seconds * 1000).toFixed(1)) + " ms";
+  }
+
+  function delayValue(input) {
+    var seconds = Number(input.value);
+    var factor = Number($("input.delayFactor:checked").value);
+    var text = milliseconds(seconds);
+    if (factor !== 1) {
+      text += " (×" + factor + ": " + milliseconds(seconds * factor) + ")";
+    }
+    return text;
+  }
+
+  var controls = [
+    [mainFrequencySlider, hz],
+    [modulationFrequencySlider, hz],
+    [modulationAmplitudeSlider, modulationDepth],
+    [delayTimeSlider, delayValue],
+    [$("input.delayCutoffFrequency"), hz],
+    [delayFeedbackSlider, percent],
+    [outputVolumeSlider, percent]
+  ];
+
+  controls.forEach(function(control) {
+    var input = control[0], format = control[1];
+    var label = input.closest("label");
+    var tooltip = document.createElement("div");
+    var hideTimer = null, hovering = false;
+    tooltip.id = input.className + "-tooltip";
+    tooltip.className = "slider-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.hidden = true;
+    document.body.appendChild(tooltip);
+    input.setAttribute("aria-describedby", tooltip.id);
+
+    function refresh() {
+      tooltip.textContent = format(input);
+      input.setAttribute("aria-valuetext", tooltip.textContent);
+      if (!tooltip.hidden) {
+        var bounds = input.getBoundingClientRect();
+        var width = tooltip.offsetWidth, height = tooltip.offsetHeight;
+        var left = bounds.left + (bounds.width - width) / 2;
+        var top = bounds.top - height - 8;
+        tooltip.style.left = Math.max(8, Math.min(left, window.innerWidth - width - 8)) + "px";
+        tooltip.style.top = (top < 8 ? bounds.bottom + 8 : top) + "px";
+      }
+    }
+
+    function hide() {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+      tooltip.hidden = true;
+    }
+
+    function show(briefly) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+      tooltip.hidden = false;
+      refresh();
+      if (briefly) {
+        hideTimer = setTimeout(function() {
+          hideTimer = null;
+          if (!hovering) { hide(); }
+        }, 1500);
+      }
+    }
+
+    label.addEventListener("pointerenter", function(event) {
+      if (event.pointerType !== "touch") {
+        hovering = true;
+        show(false);
+      }
+    });
+    label.addEventListener("pointerleave", function() {
+      hovering = false;
+      if (hideTimer === null) { hide(); }
+    });
+    input.addEventListener("focus", function() { show(true); });
+    input.addEventListener("pointerdown", function() { show(true); });
+    input.addEventListener("input", function() { show(true); });
+    input.addEventListener("blur", function() { if (!hovering) { hide(); } });
+    input.addEventListener("keydown", function(event) {
+      if (event.key === "Escape") { hide(); }
+    });
+    valueTooltips.push(refresh);
+    refresh();
+  });
+
+  window.addEventListener("resize", refreshValueTooltips);
+  window.addEventListener("scroll", refreshValueTooltips, true);
+}
 
 function getPatchKeyMaps() {
   const upperRowOffset = 48, numPadOffset = 96;
@@ -119,6 +231,7 @@ function updateModulationFrequency() {
   if (modulationOscillator) {
     modulationOscillator.frequency.value = modulationFrequencySlider.value;
   }
+  refreshValueTooltips();
 }
 
 
@@ -200,6 +313,7 @@ function updateDelayTime() {
     let delayTime = delayTimeSlider.value * delayFactor;
     delay.delayTime.value = delayTime;
   }
+  refreshValueTooltips();
 }
 
 
@@ -209,7 +323,9 @@ function initEchoControls() {
   });
 
   delayFeedbackSlider.addEventListener('input', function() {
-      feedback.gain.value = delayFeedbackSlider.value;
+      if (feedback) {
+        feedback.gain.value = delayFeedbackSlider.value;
+      }
   });
 
   var delayFactorInputs = $$(".delayFactor");
@@ -299,6 +415,7 @@ function applyPatch(patchNumber) {
       }
     }
   });
+  refreshValueTooltips();
 }
 
 
@@ -478,6 +595,7 @@ function initTapTempo() {
 initEchoControls();
 initVolume();
 initPatches();
+initValueTooltips();
 bindSpaceBar();
 bindButtons();
 initTapTempo();
