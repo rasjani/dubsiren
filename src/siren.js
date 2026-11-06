@@ -150,7 +150,7 @@ function initValueTooltips() {
 
 function getPatchKeyMaps() {
   const upperRowOffset = 48, numPadOffset = 96;
-  const values = Array.from($$(".patch-selection input")).map(
+  const values = Array.from($$(".patch-selection input[type=radio]")).map(
     input => input.value
   );
   const numPadMap = values.reduce((map, value) => {
@@ -352,7 +352,37 @@ function initPatches() {
       input.addEventListener("change", storeInputValue);
     });
   });
+  initPatchNames();
   initPatchKeyBindings();
+}
+
+function initPatchNames() {
+  $$(".patch-name").forEach(function(button) {
+    var id=button.dataset.patch;
+    var editor=$('.patch-name-input[data-patch="'+id+'"]');
+    var cancelled=false;
+    button.textContent=window.DubSettings.state.patchNames[id];
+    button.addEventListener("click", function() {
+      cancelled=false; editor.value=window.DubSettings.state.patchNames[id];
+      button.hidden=true; editor.hidden=false; editor.focus(); editor.select();
+    });
+    editor.addEventListener("blur", function() {
+      if (!cancelled) {
+        var name=editor.value.trim().slice(0,32) || id;
+        window.DubSettings.state.patchNames[id]=name;
+        button.textContent=name;
+        window.DubSettings.updateSound();
+      }
+      editor.hidden=true; button.hidden=false;
+    });
+    editor.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" || event.key === "Escape") {
+        event.preventDefault(); event.stopPropagation();
+        cancelled=event.key === "Escape";
+        editor.blur(); button.focus();
+      }
+    });
+  });
 }
 
 function storeInputValue(event) {

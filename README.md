@@ -60,7 +60,7 @@ The selected device and bindings save automatically:
   separate settings.
 - Desktop: `midi-settings.json` in Tauri's application configuration directory.
   This is a readable, pretty-printed JSON document containing MIDI mappings,
-  global volume, the selected patch, and all nine sound profiles.
+  global volume, the selected patch, and the four active sound profiles.
   On macOS this is `~/Library/Application Support/com.italtone.dubsiren/`.
   Settings survive application restarts and rebuilding/replacing the app.
 
@@ -105,7 +105,7 @@ The tempo-sync checkbox preferences themselves are saved per patch.
 Browser sound settings use `localStorage` key `dubsiren:settings:v2`; MIDI keeps
 its existing `dubsiren:midi:v1` key. Desktop stores everything in the same
 `midi-settings.json` file with top-level `version`, `volume`, `currentPatch`,
-`patches`, and `midi` fields. The current document version is 2. The file can be
+`patches`, `patchNames`, and `midi` fields. The current document version is 2. The file can be
 read or edited while the app is closed; invalid values are reported rather than
 overwriting the file. Do not add volume or runtime tempo fields inside patches.
 
@@ -118,3 +118,18 @@ remain available after import, but the new settings take precedence.
 `tests/patches.browser.js` covers patch isolation and runtime tempo behavior;
 `tests/settings-desktop.browser.js` checks migration and combined saves through
 a mocked desktop bridge. Real disk read/write behavior is covered by Rust tests.
+
+Patch names and selection
+-------------------------
+
+The four active patches always stay in slot order 1–4. Use the radio buttons or
+keys 1–4 (including the number pad) to select a patch. Click a patch's name to
+edit it in place, up to 32 characters. Enter or clicking outside saves; Escape
+cancels. Names are trimmed, and a blank name restores the slot number. Renaming
+does not select a different patch or reorder the bank.
+
+Names save as `patchNames` in the same settings as the sound profiles, in browser
+storage or the shared desktop JSON file. Older settings receive names 1, 2, 3,
+and 4 automatically. Previously saved slots 5–9 remain in stored data but are
+hidden and have no shortcuts; if one was selected, startup selects slot 1.
+`tests/patch-names.browser.js` covers editing, persistence, order, and migration.

@@ -267,3 +267,29 @@ footer p.credit img {
 #midiSettings th, #midiSettings td { padding: 0.35em; border-bottom: 1px solid #333; }
 #midiSettings p { max-width: 65em; }
 #playButton { touch-action: none; }
+
+.patch-slot { display: flex; align-items: center; margin: 0.4em 1em; min-height: 28px; }
+.param-group .patch-slot label { margin: 0; }
+.patch-slot input[type=radio] { margin: 0 0.5em 0 0; }
+.patch-name {
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  max-width: 16em;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dashed rgba(249, 218, 0, 0.5);
+  cursor: text;
+  padding: 0 0.2em;
+}
+.param-group .patch-name-input {
+  color: #F9DA00;
+  background: #171717;
+  border: 1px solid #078930;
+  font: inherit;
+  width: 12em;
+  max-width: 50vw;
+  margin: 0;
+  padding: 0 0.2em;
+}

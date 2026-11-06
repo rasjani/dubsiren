@@ -13,39 +13,26 @@
       <div class="param-container">
         <div class="param-group patch-selection">
           <h2>Patches</h2>
-          <p>
-              <label>
-                <input type="radio" name="patch" value="1">1
-              </label>
-              <label>
-                <input type="radio" name="patch" value="2">2
-              </label>
-              <label>
-                <input type="radio" name="patch" value="3">3
-              </label>
-          </p>
-          <p>
-              <label>
-                <input type="radio" name="patch" value="4">4
-              </label>
-              <label>
-                <input type="radio" name="patch" value="5">5
-              </label>
-              <label>
-                <input type="radio" name="patch" value="6">6
-              </label>
-          </p>
-          <p>
-              <label>
-                <input type="radio" name="patch" value="7">7
-              </label>
-              <label>
-                <input type="radio" name="patch" value="8">8
-              </label>
-              <label>
-                <input type="radio" name="patch" value="9">9
-              </label>
-          </p>
+          <div class="patch-slot">
+            <label><input type="radio" name="patch" value="1" aria-label="Select patch 1"></label>
+            <button type="button" class="patch-name" data-patch="1" aria-label="Rename patch 1">1</button>
+            <input type="text" class="patch-name-input" data-patch="1" aria-label="Patch 1 name" maxlength="32" hidden>
+          </div>
+          <div class="patch-slot">
+            <label><input type="radio" name="patch" value="2" aria-label="Select patch 2"></label>
+            <button type="button" class="patch-name" data-patch="2" aria-label="Rename patch 2">2</button>
+            <input type="text" class="patch-name-input" data-patch="2" aria-label="Patch 2 name" maxlength="32" hidden>
+          </div>
+          <div class="patch-slot">
+            <label><input type="radio" name="patch" value="3" aria-label="Select patch 3"></label>
+            <button type="button" class="patch-name" data-patch="3" aria-label="Rename patch 3">3</button>
+            <input type="text" class="patch-name-input" data-patch="3" aria-label="Patch 3 name" maxlength="32" hidden>
+          </div>
+          <div class="patch-slot">
+            <label><input type="radio" name="patch" value="4" aria-label="Select patch 4"></label>
+            <button type="button" class="patch-name" data-patch="4" aria-label="Rename patch 4">4</button>
+            <input type="text" class="patch-name-input" data-patch="4" aria-label="Patch 4 name" maxlength="32" hidden>
+          </div>
         </div>
         <div class="param-group">
           <h2>Carrier</h2>
@@ -130,7 +117,7 @@
       <button id="midiSettingsButton" class="big-button">MIDI Settings</button>
       <section id="midiSettings" hidden aria-label="MIDI configuration"></section>
       <footer>
-        <p class="help-text">Shortcuts: space → play, 1-9 → select patch, t → tap tempo, j/k → +/- delay factor</p>
+        <p class="help-text">Shortcuts: space → play, 1-4 → select patch, t → tap tempo, j/k → +/- delay factor</p>
         <!--
         Made by <a href="https://soundcloud.com/ras-alfred/tracks">Ras Alfred</a> for <a href="https://zongosound.com">Zongo Sound</a>.
           <a href="https://zongosound.com"><img width="80" src="https://zongosound.com/images/zongo_sound_logo.png" alt="Zongo Sound Logo"></a>
