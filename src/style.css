@@ -248,3 +248,22 @@ footer p.credit img {
     margin: 0 5px;
   }
 }
+
+#midiSettings {
+  margin: 1em 1em 1em 0;
+  padding: 1em;
+  border: 1px solid rgba(0, 176, 0, 0.5);
+  background: rgba(0, 0, 0, 0.85);
+}
+#midiSettings button, #midiSettings select, #midiResumeAudio {
+  padding: 0.4em 0.7em;
+  margin: 0.2em;
+  color: #F9DA00;
+  background: #171717;
+  border: 1px solid #078930;
+}
+#midiSettings button:disabled { opacity: 0.45; }
+#midiSettings table { width: 100%; border-collapse: collapse; text-align: left; }
+#midiSettings th, #midiSettings td { padding: 0.35em; border-bottom: 1px solid #333; }
+#midiSettings p { max-width: 65em; }
+#playButton { touch-action: none; }

@@ -9,6 +9,7 @@
   <body>
     <div class="container">
       <h1>iTAL TONE DUB SIREN</h1>
+      <div id="instrument">
       <div class="param-container">
         <div class="param-group patch-selection">
           <h2>Patches</h2>
@@ -125,6 +126,9 @@
         <button id="playButton" class="big-button">Play</button>
         <button id="panicButton" class="big-button">Reset</button>
       </div>
+      </div>
+      <button id="midiSettingsButton" class="big-button">MIDI Settings</button>
+      <section id="midiSettings" hidden aria-label="MIDI configuration"></section>
       <footer>
         <p class="help-text">Shortcuts: space → play, 1-9 → select patch, t → tap tempo, j/k → +/- delay factor</p>
         <!--
@@ -136,5 +140,7 @@
       </footer>
     </div>
     <script src="siren.js"></script>
+    <script src="midi-core.js"></script>
+    <script src="midi.js"></script>
   </body>
 </html>

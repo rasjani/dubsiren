@@ -31,7 +31,10 @@ var currentPatch, delay, feedback, filter,
     javascriptNode = ctx.createScriptProcessor(2048, 1, 1),
     patchKeyMaps = getPatchKeyMaps(),
     analyser = ctx.createAnalyser(),
-    valueTooltips = [];
+    valueTooltips = [],
+    heldSources = new Set(),
+    settingsOpen = false,
+    tapTempo;
 
 function refreshValueTooltips() {
   valueTooltips.forEach(function(refresh) { refresh(); });
@@ -200,7 +203,7 @@ function initVolume() {
     }
     try {
         var storedVolume = parseFloat(localStorage.getItem("input:volume"))
-        outputVolumeSlider.value = parseFloat(localStorage.getItem("input:volume"))
+        if (Number.isFinite(storedVolume)) { outputVolumeSlider.value = storedVolume; }
     } catch(e) {
         log(e)
     }
@@ -223,7 +226,7 @@ function getAverageVolume(array) {
 
 
 function updateMainFrequency() {
-    mainOscillator.frequency.value = mainFrequencySlider.value;
+    if (mainOscillator) { mainOscillator.frequency.value = mainFrequencySlider.value; }
 }
 
 
@@ -257,9 +260,6 @@ function play() {
 
     modulationGain.connect(mainOscillator.frequency);
     modulationGain.gain.value = modulationAmplitudeSlider.value;
-    mainFrequencySlider.addEventListener("input", updateMainFrequency);
-    modulationFrequencySlider.addEventListener("input", updateModulationFrequency);
-    modulationAmplitudeSlider.addEventListener("input", updateModulationAmplitude);
     mainOscillator.connect(outputGain);
     modulationOscillator.start();
     mainOscillator.start();
@@ -272,7 +272,6 @@ function stop() {
       return;
     }
     sirenPlaying = false;
-    mainFrequencySlider.removeEventListener("input", updateMainFrequency);
     mainOscillator.disconnect(outputGain);
     modulationOscillator.disconnect(modulationGain);
     modulationGain.disconnect(mainOscillator.frequency);
@@ -282,20 +281,14 @@ function stop() {
 
 
 function createEcho(source) {
-    delay = delay || ctx.createDelay();
+    delay = delay || ctx.createDelay(2);
     updateDelayTime();
 
     feedback = feedback || ctx.createGain();
     feedback.gain.value = delayFeedbackSlider.value;
 
     filter = filter || ctx.createBiquadFilter();
-    var delayCutoffFrequencySlider = $("input.delayCutoffFrequency");
-    filter.frequency.value = delayCutoffFrequencySlider.value;
-    filter.frequency.linearRampToValueAtTime(delayCutoffFrequencySlider.value - 1000, ctx.currentTime + 2);
-    delayCutoffFrequencySlider.addEventListener("input", function() {
-        filter.frequency.value = delayCutoffFrequencySlider.value;
-        filter.frequency.linearRampToValueAtTime(delayCutoffFrequencySlider.value - 1000, ctx.currentTime + 2);
-    });
+    updateCutoff();
 
     source.connect(delay);
     delay.connect(filter);
@@ -393,7 +386,7 @@ function storeInputValue(evt) {
   if (target.type === "checkbox") {
     localStorage.setItem(key, target.checked);
   } else {
-    localStorage.setItem(key, outputVolumeSlider.value);
+    localStorage.setItem(key, target.value);
   }
 }
 
@@ -415,6 +408,12 @@ function applyPatch(patchNumber) {
       }
     }
   });
+  updateMainFrequency();
+  updateModulationFrequency();
+  updateModulationAmplitude();
+  updateDelayTime();
+  updateCutoff();
+  outputGain.gain.value = outputVolumeSlider.value / 2;
   refreshValueTooltips();
 }
 
@@ -425,6 +424,7 @@ function initPatchKeyBindings() {
     var keyCode = evt.which || evt.keyCode;
     var patch = patchKeyMaps.upperRow[keyCode] || patchKeyMaps.numPad[keyCode];
     if (patch) {
+      if (!keyboardAllowed(evt)) { return; }
       selectPatch(patch);
       $("input[name=patch][value='" + patch + "']").checked = true;
     }
@@ -432,33 +432,65 @@ function initPatchKeyBindings() {
 }
 
 
-function bindSpaceBar() {
-  var isPlayTrigger = evt => evt.keyCode === spacebar || evt.keyCode === numPadZero;
-  window.addEventListener("keydown", function(evt) {
-      if (isPlayTrigger(evt)) {
-        play();
-        evt.preventDefault();
-      }
-  });
-
-  window.addEventListener("keyup", function(evt) {
-      if (isPlayTrigger(evt)) {
-        stop();
-        evt.preventDefault();
-      }
-  });
+function press(source) {
+  if (settingsOpen || heldSources.has(source)) { return; }
+  heldSources.add(source);
+  play();
 }
 
+function release(source) {
+  heldSources.delete(source);
+  if (!heldSources.size) { stop(); }
+}
+
+function reset() {
+  heldSources.clear();
+  stop();
+  [delay, feedback, filter].forEach(function(node) { if (node) { node.disconnect(); } });
+  delay = feedback = filter = null;
+}
+
+function updateCutoff() {
+  if (!filter) { return; }
+  var value = Number($("input.delayCutoffFrequency").value);
+  filter.frequency.cancelScheduledValues(ctx.currentTime);
+  filter.frequency.setValueAtTime(value, ctx.currentTime);
+  filter.frequency.linearRampToValueAtTime(value - 1000, ctx.currentTime + 2);
+}
+
+function keyboardAllowed(event) {
+  return !settingsOpen && !event.target.closest("button, input, select, textarea");
+}
+
+function bindSpaceBar() {
+  window.addEventListener("keydown", function(event) {
+    if (!event.repeat && keyboardAllowed(event) && (event.keyCode === spacebar || event.keyCode === numPadZero)) {
+      press("key:" + event.code);
+      event.preventDefault();
+    }
+  });
+  window.addEventListener("keyup", function(event) {
+    if (event.keyCode === spacebar || event.keyCode === numPadZero) {
+      release("key:" + event.code);
+    }
+  });
+  window.addEventListener("blur", reset);
+}
 
 function bindButtons() {
-  var playButton = document.getElementById("playButton");
-  playButton.addEventListener("mousedown", play);
-  playButton.addEventListener("touchstart", play);
-  playButton.addEventListener("mouseup", stop);
-  playButton.addEventListener("touchend", play);
-
-  var panicButton = document.getElementById("panicButton");
-  panicButton.addEventListener("click", location.reload.bind(location));
+  var button = $("#playButton");
+  button.addEventListener("pointerdown", function(event) {
+    button.setPointerCapture(event.pointerId);
+    press("pointer:" + event.pointerId);
+  });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function(type) {
+    button.addEventListener(type, function(event) { release("pointer:" + event.pointerId); });
+  });
+  button.addEventListener("keydown", function(event) {
+    if (!event.repeat && (event.code === "Space" || event.code === "Enter")) { event.preventDefault(); press("button:" + event.code); }
+  });
+  button.addEventListener("keyup", function(event) { release("button:" + event.code); });
+  $("#panicButton").addEventListener("click", reset);
 }
 
 
@@ -574,6 +606,7 @@ function initTapTempo() {
     }
   }
 
+  tapTempo = computeTempo;
   tapTempoButton.addEventListener("click", function(evt) {
     computeTempo();
   });
@@ -581,6 +614,7 @@ function initTapTempo() {
   window.addEventListener("keydown", function(evt) {
     var evt = evt || window.event;
     var keyCode = evt.which || evt.keyCode;
+    if (!keyboardAllowed(evt)) { return; }
     if (keyCode === tapTempoKeyCode) {
       computeTempo();
     } else if (keyCode === delayFactorDownCode) {
@@ -592,6 +626,10 @@ function initTapTempo() {
 }
 
 
+mainFrequencySlider.addEventListener("input", updateMainFrequency);
+modulationFrequencySlider.addEventListener("input", updateModulationFrequency);
+modulationAmplitudeSlider.addEventListener("input", updateModulationAmplitude);
+$("input.delayCutoffFrequency").addEventListener("input", updateCutoff);
 initEchoControls();
 initVolume();
 initPatches();
@@ -608,7 +646,19 @@ ctx.addEventListener("statechange", function() {
 })
 
 return {
-  outputGain: outputGain
+  outputGain: outputGain,
+  resume: function() { return ctx.resume(); },
+  press: press,
+  release: release,
+  reset: reset,
+  tap: function() { tapTempo(); },
+  settings: function(open) { settingsOpen = open; reset(); },
+  setSlider: function(name, value) {
+    var input = $("input." + name);
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
 };
 
 }());
