@@ -1,56 +1,15 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "iTal Tone Dub Siren",
+  "mainBinaryName": "iTal Tone Dub Siren",
+  "version": "0.2.0",
+  "identifier": "com.italtone.dubsiren",
   "build": {
-    "beforeBuildCommand": "",
-    "beforeDevCommand": "",
-    "devPath": "../src",
-    "distDir": "../src"
+    "frontendDist": "../src"
   },
-  "package": {
-    "productName": "iTal Tone Dub Siren",
-    "version": "0.2.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false
-    },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "com.italtone.dubsiren",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      }
-    },
+  "app": {
     "security": {
       "csp": null
-    },
-    "updater": {
-      "active": false
     },
     "windows": [
       {
@@ -61,5 +20,17 @@
         "width": 1000
       }
     ]
+  },
+  "bundle": {
+    "active": true,
+    "category": "Music",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "targets": "all"
   }
 }
