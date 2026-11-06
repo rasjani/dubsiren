@@ -17,7 +17,7 @@ async function patchPersistenceChecks(page) {
   check(await page.locator('input.mainOscillatorType[value="sine"]').isChecked(),'Waveform persists');
   check(await page.locator('input.delayFactor[value="0.5"]').isChecked(),'Delay factor persists');
   await page.locator('input[name=patch][value="2"]').check();
-  check(await value('mainFrequency')==='400','Patch two has independent defaults');
+  check(await value('mainFrequency')==='660','Patch two has independent defaults');
   check(await value('volume')==='0.23','Switching patch preserves global volume');
   await edit('mainFrequency','800');await edit('volume','0.42');
   await page.locator('input[name=patch][value="1"]').check();

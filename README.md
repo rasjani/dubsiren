@@ -122,7 +122,8 @@ a mocked desktop bridge. Real disk read/write behavior is covered by Rust tests.
 Patch names and selection
 -------------------------
 
-The four active patches always stay in slot order 1–4. Use the radio buttons or
+The four active patches always stay in slot order 1–4. Fresh installations start
+with the named factory presets below. Use the radio buttons or
 keys 1–4 (including the number pad) to select a patch. Click a patch's name to
 edit it in place, up to 32 characters. Enter or clicking outside saves; Escape
 cancels. Names are trimmed, and a blank name restores the slot number. Renaming
@@ -133,3 +134,28 @@ storage or the shared desktop JSON file. Older settings receive names 1, 2, 3,
 and 4 automatically. Previously saved slots 5–9 remain in stored data but are
 hidden and have no shortcuts; if one was selected, startup selects slot 1.
 `tests/patch-names.browser.js` covers editing, persistence, order, and migration.
+
+Factory presets
+---------------
+
+When no sound profiles have been saved, the app initializes these four sounds:
+
+| Slot | Name | Character |
+| --- | --- | --- |
+| 1 | Roots Sweep | Slow, broad square-wave sweep with a 480 ms echo. |
+| 2 | Two Tone | Sine carrier alternating between two pitches, with a 320 ms echo. |
+| 3 | Space Wobble | Rounded triangle tone with faster vibrato and a 360 ms echo. |
+| 4 | Laser Zaps | Bright sawtooth with fast pitch switching and a short 180 ms echo. |
+
+All start with tap-tempo sync disabled, delay factor 1, and moderate feedback.
+Global volume remains 80% on a fresh install. Each profile and name can be edited
+and saved as usual. Existing saved profiles and names are never replaced by
+factory presets. Legacy profiles retain their original control defaults when
+imported, and unnamed legacy slots keep their numeric names. Missing legacy
+slots receive factory presets. Resetting all saved settings also restores these
+factory sounds.
+
+`tests/factory-presets.browser.js` checks fresh browser and mocked desktop
+initialization, persistence, and preservation of custom values. It also renders
+three seconds of each preset offline to check for nonzero, finite audio with
+headroom at the default volume; this is not a listening test.

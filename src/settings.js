@@ -9,7 +9,21 @@
     const input = document.querySelector("input." + name);
     defaults[name] = input.type === "checkbox" ? input.defaultChecked : input.type === "radio" ? document.querySelector("input." + name + "[checked]").value : Number(input.defaultValue);
   }
-  const empty = () => ({version:2, volume:0.8, currentPatch:"1", patches:Object.fromEntries(Array.from({length:4}, (_,i) => [String(i+1), {...defaults}])), patchNames:{1:"1",2:"2",3:"3",4:"4"}, midi:window.DubMidi.empty()});
+  // Frequencies are in Hz and delay times in seconds; tempo sync starts disabled.
+  const factoryPresets = [
+    {name:"Roots Sweep", values:{mainFrequency:640, modulationFrequency:0.8, modulationAmplitude:260,
+      mainOscillatorType:"square", modulationOscillatorType:"sine", delayTime:0.48, delayFeedback:0.45, delayCutoffFrequency:2600}},
+    {name:"Two Tone", values:{mainFrequency:660, modulationFrequency:2.2, modulationAmplitude:180,
+      mainOscillatorType:"sine", modulationOscillatorType:"square", delayTime:0.32, delayFeedback:0.4, delayCutoffFrequency:3600}},
+    {name:"Space Wobble", values:{mainFrequency:420, modulationFrequency:5.5, modulationAmplitude:130,
+      mainOscillatorType:"triangle", modulationOscillatorType:"sine", delayTime:0.36, delayFeedback:0.5, delayCutoffFrequency:3000}},
+    {name:"Laser Zaps", values:{mainFrequency:780, modulationFrequency:8, modulationAmplitude:220,
+      mainOscillatorType:"sawtooth", modulationOscillatorType:"square", delayTime:0.18, delayFeedback:0.35, delayCutoffFrequency:4200}}
+  ];
+  const empty = () => ({version:2, volume:0.8, currentPatch:"1",
+    patches:Object.fromEntries(factoryPresets.map((preset,i) => [String(i+1), {...defaults, ...preset.values}])),
+    patchNames:Object.fromEntries(factoryPresets.map((preset,i) => [String(i+1), preset.name])),
+    midi:window.DubMidi.empty()});
   function validField(name, value) {
     const input = document.querySelector("input." + name);
     if (input.type === "checkbox") return typeof value === "boolean";
@@ -39,13 +53,18 @@
     if (/^[1-4]$/.test(selected)) value.currentPatch = selected;
     const volume = localStorage.getItem("input:volume");
     if (volume !== null && Number.isFinite(Number(volume)) && Number(volume) >= 0 && Number(volume) <= 1) value.volume = Number(volume);
+    const imported = new Set();
     for (let patch=1;patch<=9;patch++) for (const name of fields) {
       const raw = localStorage.getItem(`patch:${patch}:${name}`);
       if (raw === null) continue;
       const input = document.querySelector("input." + name);
       const converted = input.type === "checkbox" ? (raw === "true" ? true : raw === "false" ? false : null) : input.type === "range" ? Number(raw) : raw;
       if (validField(name,converted)) {
-        if (!value.patches[patch]) value.patches[patch]={...defaults};
+        if (!imported.has(patch)) {
+          value.patches[patch]={...defaults};
+          if (patch <= 4) value.patchNames[patch]=String(patch);
+          imported.add(patch);
+        }
         value.patches[patch][name] = converted;
       }
     }

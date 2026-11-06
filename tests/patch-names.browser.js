@@ -5,7 +5,7 @@ async function patchNameChecks(page) {
   const ready=()=>page.waitForFunction(()=>!!window.ZongoDubSiren && !!document.querySelector('#midiRows tr'));
   await ready();
   check(await page.locator('input[name=patch]').count()===4,'Four patches');
-  check((await page.locator('.patch-name').allTextContents()).join(',')==='1,2,3,4','Default names and order');
+  check((await page.locator('.patch-name').allTextContents()).join(',')==='Roots Sweep,Two Tone,Space Wobble,Laser Zaps','Default names and order');
   await page.locator('.patch-name[data-patch="2"]').click();
   const editor=page.locator('.patch-name-input[data-patch="2"]');await editor.fill('  Space echo  ');await editor.press('Enter');
   check(await page.locator('.patch-name[data-patch="2"]').textContent()==='Space echo','Name saved and trimmed');
@@ -16,7 +16,7 @@ async function patchNameChecks(page) {
   await page.locator('h1').click();
   check(await page.locator('.patch-name[data-patch="3"]').textContent()==='Dub swell','Click outside commits');
   await page.reload();await ready();
-  check((await page.locator('.patch-name').allTextContents()).join(',')==='1,Space echo,Dub swell,4','Names persist in fixed slot order');
+  check((await page.locator('.patch-name').allTextContents()).join(',')==='Roots Sweep,Space echo,Dub swell,Laser Zaps','Names persist in fixed slot order');
   await page.locator('.patch-name[data-patch="2"]').click();await editor.fill('');await editor.press('Enter');
   check(await page.locator('.patch-name[data-patch="2"]').textContent()==='2','Empty name resets to slot number');
   await page.locator('h1').click();await page.keyboard.press('4');
